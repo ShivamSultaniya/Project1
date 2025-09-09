@@ -1,0 +1,179 @@
+# Quick Test Configuration for Development
+# This config is optimized for fast testing and development
+
+# Dataset Configuration
+dataset:
+  train_dir: "train"
+  test_dir: "test"
+  image_size: [128, 128]  # Smaller size for faster training
+  num_classes: 3
+  class_mapping:
+    background: 0
+    class_1: 1
+    class_2: 2
+
+# Model Configuration
+model:
+  architecture: "EnhancedDualInputUNet"
+  input_channels: 6
+  output_channels: 3
+  features: [32, 64, 128, 256]  # Smaller model for faster training
+  dropout_rate: 0.1
+  use_attention: false
+  pretrained: false
+
+# Training Configuration
+training:
+  # Basic Parameters
+  num_epochs: 5  # Very few epochs for quick testing
+  batch_size: 2  # Small batch size
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  
+  # Optimizer Settings
+  optimizer: "AdamW"
+  momentum: 0.9
+  
+  # Scheduler Settings
+  scheduler: "StepLR"
+  scheduler_params:
+    step_size: 2
+    gamma: 0.5
+    eta_min: 0.00001
+  
+  # Loss Function
+  loss_function: "CrossEntropyLoss"  # Simpler loss for testing
+  focal_loss_params:
+    alpha: 1.0
+    gamma: 2.0
+  
+  # Early Stopping
+  early_stopping:
+    enabled: false  # Disabled for quick testing
+    patience: 3
+    monitor: "val_iou"
+    mode: "max"
+    min_delta: 0.001
+
+# Data Augmentation
+augmentation:
+  enabled: false  # Disabled for faster training
+  probability: 0.3
+  transforms:
+    horizontal_flip:
+      enabled: true
+      probability: 0.5
+    vertical_flip:
+      enabled: false
+      probability: 0.3
+    rotation:
+      enabled: false
+      degrees: 10
+    color_jitter:
+      enabled: false
+      brightness: 0.1
+      contrast: 0.1
+      saturation: 0.1
+      hue: 0.05
+
+# Hardware Configuration
+hardware:
+  device: "auto"
+  mixed_precision: false  # Disabled for compatibility
+  num_workers: 2  # Reduced for testing
+  pin_memory: true
+  persistent_workers: false
+  compile_model: false  # Disabled for compatibility
+  
+  memory:
+    max_gpu_memory_fraction: 0.8
+    empty_cache_frequency: 5
+
+# Checkpointing and Saving
+checkpointing:
+  enabled: false  # Disabled for quick testing
+  save_frequency: 2
+  save_best_only: true
+  checkpoint_dir: "checkpoints"
+  
+  save_final_model: true
+  save_best_model: true
+  model_save_format: "pth"
+  
+  save_optimizer_state: false
+  save_scheduler_state: false
+  save_random_state: false
+
+# Logging and Monitoring
+logging:
+  enabled: true
+  log_level: "INFO"
+  
+  console_logging: true
+  progress_bar: true
+  
+  log_to_file: false  # Disabled for testing
+  log_file: "training.log"
+  
+  log_frequency: 1
+  save_training_history: true
+  history_file: "quick_test_history.json"
+  
+  plot_training_curves: true
+  save_sample_predictions: false  # Disabled for speed
+  num_sample_predictions: 1
+
+# Validation Configuration
+validation:
+  enabled: true
+  frequency: 1
+  
+  metrics:
+    iou: true
+    f1_score: true
+    accuracy: false
+    precision: false
+    recall: false
+  
+  per_class_metrics: false
+  use_full_test_set: false  # Use subset for faster validation
+  validation_split: 0.1
+
+# Experiment Configuration
+experiment:
+  name: "quick_test"
+  version: "v0.1"
+  description: "Quick test configuration for development"
+  tags: ["test", "development"]
+  
+  seed: 42
+  deterministic: false  # Disabled for speed
+  benchmark: true
+
+# Debug Configuration
+debug:
+  enabled: true
+  
+  # Limit samples for quick testing
+  limit_train_samples: 20  # Only 20 training samples
+  limit_test_samples: 10   # Only 10 test samples
+  
+  overfit_single_batch: false
+  fast_dev_run: false
+  
+  detect_anomaly: false
+  profile_memory: false
+  
+  save_augmented_samples: false
+  visualize_model_architecture: false
+
+# Paths Configuration
+paths:
+  data_root: "."
+  train_images: "{data_root}/train"
+  test_images: "{data_root}/test"
+  
+  output_dir: "outputs"
+  model_dir: "{output_dir}/models"
+  log_dir: "{output_dir}/logs"
+  visualization_dir: "{output_dir}/visualizations" 

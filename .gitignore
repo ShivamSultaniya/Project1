@@ -1,0 +1,13 @@
+test
+train
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.pywz
+*.pyzw
+*.pyzwz
+*.png
+*.pth
+

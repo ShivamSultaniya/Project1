@@ -1,0 +1,284 @@
+# Multi-Input Image Segmentation Training Configuration
+# This file contains all configurable parameters for the training scripts
+
+# Dataset Configuration
+dataset:
+  train_dir: "train"
+  test_dir: "test"
+  image_size: [256, 256]  # [height, width] - resized from original 512x512
+  num_classes: 3
+  class_mapping:
+    background: 0    # Original value: 0
+    class_1: 1      # Original value: 128
+    class_2: 2      # Original value: 255
+
+# Model Configuration
+model:
+  architecture: "EnhancedDualInputUNet"
+  input_channels: 6  # 2 x 3-channel RGB images
+  output_channels: 3 # 3 classes per output
+  features: [64, 128, 256, 512]  # Encoder feature dimensions
+  dropout_rate: 0.1
+  use_attention: false  # Future feature
+  pretrained: false
+
+# Training Configuration
+training:
+  # Basic Parameters
+  num_epochs: 50
+  batch_size: "auto"  # or specific number like 4, 8, 16
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  
+  # Optimizer Settings
+  optimizer: "AdamW"  # Options: Adam, AdamW, SGD
+  momentum: 0.9  # Only for SGD
+  
+  # Scheduler Settings
+  scheduler: "CosineAnnealingWarmRestarts"  # Options: StepLR, CosineAnnealingLR, CosineAnnealingWarmRestarts
+  scheduler_params:
+    T_0: 10      # Initial restart period
+    T_mult: 2    # Multiplication factor for restart period
+    eta_min: 0.00001  # Minimum learning rate
+  
+  # Loss Function
+  loss_function: "FocalLoss"  # Options: CrossEntropyLoss, FocalLoss
+  focal_loss_params:
+    alpha: 1.0
+    gamma: 2.0
+  
+  # Early Stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    monitor: "val_iou"  # Options: val_loss, val_iou, val_f1
+    mode: "max"  # max for IoU/F1, min for loss
+    min_delta: 0.001
+
+# Data Augmentation
+augmentation:
+  enabled: true
+  probability: 0.5  # Probability of applying augmentation
+  transforms:
+    horizontal_flip:
+      enabled: true
+      probability: 0.5
+    vertical_flip:
+      enabled: true
+      probability: 0.3
+    rotation:
+      enabled: true
+      degrees: 15
+    color_jitter:
+      enabled: true
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    gaussian_blur:
+      enabled: false
+      kernel_size: 3
+      sigma: [0.1, 2.0]
+    random_crop:
+      enabled: false
+      size: [224, 224]
+    elastic_transform:
+      enabled: false
+      alpha: 1.0
+      sigma: 50
+
+# Hardware Configuration
+hardware:
+  device: "auto"  # Options: auto, cuda, cpu, cuda:0, cuda:1
+  mixed_precision: true  # Enable automatic mixed precision (AMP)
+  num_workers: "auto"  # or specific number
+  pin_memory: true
+  persistent_workers: true
+  compile_model: true  # PyTorch 2.0+ model compilation
+  
+  # Memory Management
+  memory:
+    max_gpu_memory_fraction: 0.9
+    empty_cache_frequency: 10  # Clear cache every N batches
+
+# Checkpointing and Saving
+checkpointing:
+  enabled: true
+  save_frequency: 10  # Save checkpoint every N epochs
+  save_best_only: false
+  checkpoint_dir: "checkpoints"
+  
+  # Model Saving
+  save_final_model: true
+  save_best_model: true
+  model_save_format: "pth"  # Options: pth, onnx
+  
+  # What to save in checkpoints
+  save_optimizer_state: true
+  save_scheduler_state: true
+  save_random_state: true
+
+# Logging and Monitoring
+logging:
+  enabled: true
+  log_level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  
+  # Console Logging
+  console_logging: true
+  progress_bar: true
+  
+  # File Logging
+  log_to_file: true
+  log_file: "training.log"
+  
+  # Metrics Logging
+  log_frequency: 1  # Log every N epochs
+  save_training_history: true
+  history_file: "training_history.json"
+  
+  # Visualization
+  plot_training_curves: true
+  save_sample_predictions: true
+  num_sample_predictions: 3
+
+# Validation Configuration
+validation:
+  enabled: true
+  frequency: 1  # Validate every N epochs
+  
+  # Metrics to Calculate
+  metrics:
+    iou: true
+    f1_score: true
+    accuracy: true
+    precision: true
+    recall: true
+  
+  # Per-class metrics
+  per_class_metrics: true
+  
+  # Validation Data
+  use_full_test_set: true
+  validation_split: 0.2  # If no separate test set
+
+# Inference Configuration
+inference:
+  batch_size: 8
+  use_tta: false  # Test Time Augmentation
+  tta_transforms: ["horizontal_flip", "vertical_flip"]
+  
+  # Post-processing
+  apply_crf: false  # Conditional Random Fields
+  crf_params:
+    n_iters: 10
+    pos_w: 3
+    pos_xy_std: 1
+    bi_w: 4
+    bi_xy_std: 67
+    bi_rgb_std: 3
+
+# Experiment Configuration
+experiment:
+  name: "dual_input_segmentation"
+  version: "v1.0"
+  description: "Full dataset training with enhanced U-Net"
+  tags: ["segmentation", "dual-input", "unet"]
+  
+  # Reproducibility
+  seed: 42
+  deterministic: true
+  benchmark: true  # CuDNN benchmark for consistent input sizes
+
+# Advanced Features
+advanced:
+  # Gradient Clipping
+  gradient_clipping:
+    enabled: false
+    max_norm: 1.0
+    norm_type: 2
+  
+  # Learning Rate Finder
+  lr_finder:
+    enabled: false
+    start_lr: 1e-7
+    end_lr: 10
+    num_iter: 100
+  
+  # Progressive Resizing
+  progressive_resizing:
+    enabled: false
+    sizes: [[128, 128], [192, 192], [256, 256]]
+    epochs_per_size: [10, 15, 25]
+  
+  # Knowledge Distillation
+  knowledge_distillation:
+    enabled: false
+    teacher_model_path: ""
+    temperature: 4.0
+    alpha: 0.7
+  
+  # Multi-GPU Training
+  distributed:
+    enabled: false
+    backend: "nccl"  # Options: nccl, gloo
+    world_size: 1
+    rank: 0
+
+# Paths Configuration
+paths:
+  # Data Paths
+  data_root: "."
+  train_images: "{data_root}/train"
+  test_images: "{data_root}/test"
+  
+  # Output Paths
+  output_dir: "outputs"
+  model_dir: "{output_dir}/models"
+  log_dir: "{output_dir}/logs"
+  visualization_dir: "{output_dir}/visualizations"
+  
+  # Cache Paths
+  cache_dir: ".cache"
+  preprocessed_data_dir: "{cache_dir}/preprocessed"
+
+# Environment Configuration
+environment:
+  # Python Environment
+  python_version: ">=3.8"
+  
+  # Required Packages
+  required_packages:
+    - "torch>=1.9.0"
+    - "torchvision>=0.10.0"
+    - "numpy>=1.21.0"
+    - "pillow>=8.3.0"
+    - "matplotlib>=3.4.0"
+    - "scikit-learn>=1.0.0"
+    - "tqdm>=4.62.0"
+    - "pyyaml>=5.4.0"
+  
+  # Optional Packages
+  optional_packages:
+    - "tensorboard>=2.7.0"
+    - "wandb>=0.12.0"
+    - "opencv-python>=4.5.0"
+
+# Debug Configuration
+debug:
+  enabled: false
+  
+  # Dataset Debugging
+  limit_train_samples: null  # Limit training samples for debugging
+  limit_test_samples: null   # Limit test samples for debugging
+  
+  # Training Debugging
+  overfit_single_batch: false
+  fast_dev_run: false  # Run single batch for each train/val
+  
+  # Memory Debugging
+  detect_anomaly: false  # PyTorch anomaly detection
+  profile_memory: false
+  
+  # Visualization Debugging
+  save_augmented_samples: false
+  visualize_model_architecture: false 
